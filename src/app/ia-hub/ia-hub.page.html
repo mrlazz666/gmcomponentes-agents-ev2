@@ -1,0 +1,277 @@
+<ion-header>
+  <ion-toolbar color="dark">
+    <ion-title>IA GM-COMPONENTS</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-segment [(ngModel)]="selectedSegment" class="gm-segment">
+    <ion-segment-button value="recommendation">
+      <ion-label>Recomendacion</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="faq">
+      <ion-label>FAQ</ion-label>
+    </ion-segment-button>
+  </ion-segment>
+
+  <div *ngIf="selectedSegment === 'recommendation'" class="panelGroup">
+    <section class="panel">
+      <div class="recommendationHeader">
+        <div>
+          <h2>Recomendaciones</h2>
+          <p class="sectionLead">La IA te hace preguntas antes de recomendar para ser mas precisa.</p>
+        </div>
+        <button type="button" class="ghostButton" (click)="resetRecommendationConversation()">
+          Reiniciar
+        </button>
+      </div>
+
+      <div class="summaryStrip">
+        <span class="summaryChip" *ngFor="let chip of recommendationSummaryChips">{{ chip }}</span>
+      </div>
+
+      <div class="chatLog">
+        <article
+          *ngFor="let entry of recommendationMessages"
+          class="chatBubble"
+          [ngClass]="entry.role === 'assistant' ? 'assistantBubble' : 'userBubble'"
+        >
+          <span class="bubbleRole">{{ entry.role === 'assistant' ? 'IA' : 'Tu' }}</span>
+          <p>{{ entry.text }}</p>
+        </article>
+      </div>
+
+      <div class="quickOptionRow" *ngIf="recommendationQuickOptions.length">
+        <button
+          *ngFor="let option of recommendationQuickOptions"
+          type="button"
+          class="quickOption"
+          [disabled]="recommendationLoading"
+          (click)="selectRecommendationOption(option)"
+        >
+          {{ option }}
+        </button>
+      </div>
+
+      <form class="stack" (ngSubmit)="submitRecommendation()">
+        <textarea
+          name="recommendationMessage"
+          rows="3"
+          [(ngModel)]="recommendationMessage"
+          [placeholder]="recommendationPlaceholderByStep[recommendationStep]"
+        ></textarea>
+
+        <ng-container *ngIf="recommendationStep === 'initial'; else lockedBudgetBlock">
+          <input
+            name="recommendationBudget"
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            required
+            [value]="recommendationBudget"
+            (input)="formatBudgetInput($event)"
+            placeholder="Presupuesto CLP (obligatorio) ej: $600.000"
+          />
+          <p class="formError" *ngIf="recommendationBudgetError">{{ recommendationBudgetError }}</p>
+        </ng-container>
+
+        <ng-template #lockedBudgetBlock>
+          <div class="lockedBudget">Presupuesto actual: {{ formattedRecommendationBudget }}</div>
+        </ng-template>
+
+        <button
+          type="submit"
+          [disabled]="recommendationLoading || (recommendationStep === 'initial' && !recommendationBudget)"
+        >
+          {{ recommendationLoading ? 'Pensando...' : recommendationButtonLabelByStep[recommendationStep] }}
+        </button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="resultHeader">
+        <div>
+          <h2>Resultado</h2>
+          <p class="sectionLead">El carrusel ordena de mayor prioridad a menor prioridad.</p>
+        </div>
+      </div>
+
+      <div class="carouselShowcase" *ngIf="activeRecommendationProduct && activeRecommendationCopy; else emptyRecommendation">
+        <div class="carouselHero">
+          <div>
+            <p class="carouselEyebrow">{{ activeRecommendationCopy.title }}</p>
+            <h3 class="carouselHeadline">{{ activeRecommendationProduct.nombre }}</h3>
+            <p class="carouselSubtitle">{{ activeRecommendationCopy.subtitle }}</p>
+            <p class="carouselBody">{{ activeRecommendationCopy.body }}</p>
+          </div>
+
+          <div class="carouselHeroMeta">
+            <span class="heroMetaChip" *ngIf="activeRecommendationProduct.marca">
+              {{ activeRecommendationProduct.marca }}
+            </span>
+            <span class="heroMetaChip">{{ activeRecommendationProduct.categoria }}</span>
+            <span class="heroMetaChip">
+              {{ activeRecommendationProduct.precio | currency:'CLP':'symbol':'1.0-0' }}
+            </span>
+          </div>
+        </div>
+
+        <div class="carouselStage">
+          <button
+            type="button"
+            class="carouselNavButton"
+            (click)="goToPreviousRecommendation()"
+            [disabled]="recommendationSuggestions.length <= 1"
+          >
+            Anterior
+          </button>
+
+          <article class="productCard">
+            <div class="imageFrame">
+              <img
+                class="productImage"
+                [src]="activeRecommendationProduct.image"
+                [alt]="activeRecommendationProduct.nombre"
+              />
+            </div>
+            <p class="productRank" *ngIf="activeRecommendationProduct.rankLabel">
+              {{ activeRecommendationProduct.rankLabel }}
+            </p>
+            <h3>{{ activeRecommendationProduct.nombre }}</h3>
+            <p class="productNote" *ngIf="activeRecommendationProduct.recommendationNote">
+              {{ activeRecommendationProduct.recommendationNote }}
+            </p>
+            <p *ngIf="activeRecommendationProduct.marca">Marca: {{ activeRecommendationProduct.marca }}</p>
+            <p>{{ activeRecommendationProduct.descripcion }}</p>
+            <p>{{ activeRecommendationProduct.categoria }}</p>
+            <p>{{ activeRecommendationProduct.precio | currency:'CLP':'symbol':'1.0-0' }}</p>
+            <p>Stock: {{ activeRecommendationProduct.stock }}</p>
+            <ul class="specList" *ngIf="activeRecommendationProduct.specs?.length">
+              <li *ngFor="let spec of activeRecommendationProduct.specs">{{ spec }}</li>
+            </ul>
+          </article>
+
+          <button
+            type="button"
+            class="carouselNavButton"
+            (click)="goToNextRecommendation()"
+            [disabled]="recommendationSuggestions.length <= 1"
+          >
+            Siguiente
+          </button>
+        </div>
+
+        <div class="carouselProgressTrack">
+          <span
+            class="carouselProgressBar"
+            [style.width.%]="(activeRecommendationIndex + 1) / recommendationSuggestions.length * 100"
+          ></span>
+        </div>
+
+        <div class="carouselThumbRail">
+          <button
+            *ngFor="let product of recommendationSuggestions; let i = index"
+            type="button"
+            class="thumbButton"
+            [ngClass]="i === activeRecommendationIndex ? 'active' : ''"
+            (click)="setActiveRecommendation(i)"
+          >
+            <span class="thumbRank">{{ i + 1 }}</span>
+            <img class="thumbImage" [src]="product.image" [alt]="product.nombre" />
+            <span class="thumbLabel">{{ product.nombre }}</span>
+          </button>
+        </div>
+      </div>
+
+      <ng-template #emptyRecommendation>
+        <div class="emptyResult">
+          <p>
+            Cuando terminemos las preguntas de marca, uso y prioridad, aqui apareceran las mejores recomendaciones.
+          </p>
+        </div>
+      </ng-template>
+    </section>
+  </div>
+
+  <div *ngIf="selectedSegment === 'faq'">
+    <form [formGroup]="faqForm" (ngSubmit)="submitFaq()">
+      <ion-item>
+        <ion-label position="stacked">Pregunta</ion-label>
+        <ion-textarea formControlName="pregunta"></ion-textarea>
+      </ion-item>
+
+      <ion-button expand="block" type="submit" class="gm-submit-btn">
+        {{ loading ? 'Consultando...' : 'Consultar FAQ' }}
+      </ion-button>
+    </form>
+
+    <ion-card *ngIf="faqResult">
+      <ion-card-header>
+        <ion-card-title>Respuesta</ion-card-title>
+      </ion-card-header>
+
+      <ion-card-content>
+        <p class="faq-answer">{{ faqResult.respuesta }}</p>
+
+        <div class="result-block" *ngIf="faqResult.sugerencias?.length">
+          <h3>Sugerencias</h3>
+          <ul class="result-list">
+            <li *ngFor="let item of faqResult.sugerencias">{{ item }}</li>
+          </ul>
+        </div>
+
+        <div class="result-block" *ngIf="faqResult.productoDestacado">
+          <h3>Producto encontrado</h3>
+
+          <div class="product-card">
+            <img
+              *ngIf="faqResult.productoDestacado.image"
+              [src]="faqResult.productoDestacado.image"
+              [alt]="faqResult.productoDestacado.nombre"
+              class="product-image"
+            />
+
+            <div class="product-info">
+              <p><strong>{{ faqResult.productoDestacado.nombre }}</strong></p>
+              <p>{{ faqResult.productoDestacado.descripcion }}</p>
+              <p>
+                Precio:
+                {{ faqResult.productoDestacado.precio | currency:'CLP':'symbol':'1.0-0' }}
+              </p>
+              <p>
+                Stock:
+                <strong>{{ faqResult.productoDestacado.stock }}</strong>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="result-block" *ngIf="faqResult.productosRelacionados?.length">
+          <h3>Productos relacionados</h3>
+
+          <div class="faq-carousel">
+            <div class="faq-carousel-track">
+              <div class="faq-product-card" *ngFor="let item of faqResult.productosRelacionados">
+                <img
+                  *ngIf="item.image"
+                  [src]="item.image"
+                  [alt]="item.nombre"
+                  class="faq-product-image"
+                />
+                <div class="faq-product-content">
+                  <p><strong>{{ item.nombre }}</strong></p>
+                  <p>{{ item.descripcion }}</p>
+                  <p>{{ item.precio | currency:'CLP':'symbol':'1.0-0' }}</p>
+                  <p class="faq-stock">
+                    Stock:
+                    <strong>{{ item.stock }}</strong>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>

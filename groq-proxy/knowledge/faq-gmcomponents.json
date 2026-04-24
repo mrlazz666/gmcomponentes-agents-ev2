@@ -1,0 +1,52 @@
+[
+  {
+    "id": "faq-1",
+    "pregunta": "Que vende GM-COMPONENTS",
+    "respuesta": "GM-COMPONENTS vende componentes de hardware para computadores, incluyendo tarjetas graficas, procesadores, memorias RAM, almacenamiento, placas madre y gabinetes."
+  },
+  {
+    "id": "faq-2",
+    "pregunta": "La tienda ayuda a elegir productos",
+    "respuesta": "Si. La tienda cuenta con un asistente de IA que orienta al cliente segun presupuesto, uso principal, prioridades y productos disponibles en el catalogo."
+  },
+  {
+    "id": "faq-3",
+    "pregunta": "La IA puede modificar productos",
+    "respuesta": "No. La IA solo consulta informacion y entrega orientacion. No modifica el catalogo ni altera los datos del sistema."
+  },
+  {
+    "id": "faq-4",
+    "pregunta": "La recomendacion usa productos reales",
+    "respuesta": "Si. Las recomendaciones se basan en productos reales obtenidos desde el catalogo disponible en el backend actual de GM-COMPONENTS."
+  },
+  {
+    "id": "faq-5",
+    "pregunta": "Que tarjetas graficas venden",
+    "respuesta": "GM-COMPONENTS ofrece tarjetas graficas disponibles en su catalogo, incluyendo modelos de NVIDIA y AMD, segun stock y disponibilidad actual."
+  },
+  {
+    "id": "faq-6",
+    "pregunta": "Que procesadores venden",
+    "respuesta": "GM-COMPONENTS ofrece procesadores disponibles en su catalogo, incluyendo distintas alternativas segun uso, presupuesto y stock actual."
+  },
+  {
+    "id": "faq-7",
+    "pregunta": "Venden memorias RAM",
+    "respuesta": "Si. GM-COMPONENTS dispone de memorias RAM dentro de su catalogo de productos, segun disponibilidad actual."
+  },
+  {
+    "id": "faq-8",
+    "pregunta": "Venden almacenamiento SSD o NVMe",
+    "respuesta": "Si. GM-COMPONENTS ofrece opciones de almacenamiento, incluyendo productos SSD y NVMe, dependiendo del stock disponible."
+  },
+  {
+    "id": "faq-9",
+    "pregunta": "La respuesta FAQ puede mostrar productos",
+    "respuesta": "Si. Cuando la consulta del usuario esta relacionada con productos del catalogo, el sistema puede complementar la respuesta con productos relacionados."
+  },
+  {
+    "id": "faq-10",
+    "pregunta": "La IA sirve para orientacion de compra",
+    "respuesta": "Si. La IA esta pensada para apoyar consultas frecuentes y orientar decisiones de compra con base en el catalogo disponible."
+  }
+]
