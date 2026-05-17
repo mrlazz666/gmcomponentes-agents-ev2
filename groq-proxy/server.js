@@ -9,6 +9,7 @@ dotenv.config({
 
 const faqRoute = require('./routes/faq.route');
 const recommendationRoute = require('./routes/recommendation.route');
+const agentRoute = require('./routes/agent.route');
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/faq', faqRoute);
 app.use('/api/recommendation', recommendationRoute);
+app.use('/api/agent', agentRoute);
 
 const port = process.env.PORT || 8787;
 app.listen(port, () => {

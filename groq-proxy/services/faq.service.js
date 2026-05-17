@@ -21,21 +21,117 @@ const STOPWORDS = new Set([
 
 const CATEGORY_SYNONYMS = {
   cpu: ['cpu', 'proce', 'proces', 'procesador', 'procesadores', 'ryzen', 'intel', 'core', 'i3', 'i5', 'i7', 'i9'],
-  gpu: ['gpu', 'grafica', 'graficas', 'gráfica', 'gráficas', 'tarjeta', 'tarjetas', 'video', 'rtx', 'gtx', 'rx'],
+  gpu: ['gpu', 'grafica', 'graficas', 'gr?fica', 'gr?ficas', 'tarjeta', 'tarjetas', 'video', 'rtx', 'gtx', 'rx'],
   ram: ['ram', 'memoria', 'memorias', 'ddr4', 'ddr5', 'dimm'],
   storage: ['disco', 'discos', 'ssd', 'hdd', 'nvme', 'm2', 'm.2', 'almacenamiento', 'storage', 'unidad'],
   motherboard: ['placa', 'placas', 'mother', 'motherboard', 'placamadre', 'placa madre', 'board'],
   case: ['gabinete', 'gabinetes', 'case', 'torre', 'chasis', 'caja']
 };
 
+const BRAND_MATCHERS = [
+  'nvidia',
+  'amd',
+  'intel',
+  'corsair',
+  'kingston',
+  'teamgroup',
+  'samsung',
+  'western digital',
+  'wd',
+  'msi',
+  'asus',
+  'gigabyte',
+  'nzxt',
+  'cooler master',
+  'thermaltake'
+];
+
+const GENERIC_QUERY_TOKENS = new Set([
+  'que', 'de', 'del', 'la', 'el', 'los', 'las', 'un', 'una', 'unos', 'unas',
+  'y', 'o', 'en', 'con', 'sin', 'para', 'por', 'me', 'mi', 'tu', 'su', 'sus',
+  'tienen', 'tiene', 'hay', 'vende', 'venden', 'mostrar', 'muestra', 'muestrame',
+  'busco', 'quiero', 'necesito', 'ver', 'algun', 'alguna', 'algunas', 'algunos',
+  'cuales', 'cu?les', 'ser', 'es', 'son', 'sobre', 'dame', 'listar', 'lista',
+  'productos', 'producto', 'marca', 'modelo', 'stock', 'disponible', 'disponibilidad'
+]);
+
+for (const synonymList of Object.values(CATEGORY_SYNONYMS)) {
+  for (const term of synonymList) {
+    for (const part of normalizeText(term).split(' ')) {
+      if (part) GENERIC_QUERY_TOKENS.add(part);
+    }
+  }
+}
+
+for (const brand of BRAND_MATCHERS) {
+  for (const part of normalizeText(brand).split(' ')) {
+    if (part) GENERIC_QUERY_TOKENS.add(part);
+  }
+}
+
 function normalizeText(value) {
   return String(value || '')
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[¿?¡!.,;:()[\]{}\/\\\-_"']/g, ' ')
+    .replace(/[?????!.,;:()[\]{}\/\\\-_"']/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function normalizeCompact(value) {
+  return normalizeText(value).replace(/[^a-z0-9]/g, '');
+}
+
+function splitAlphaNumericToken(token) {
+  const normalized = normalizeText(token);
+  const parts = normalized.match(/[a-z]+|\d+[a-z]*/g);
+  return parts ? parts.filter(Boolean) : [];
+}
+
+function levenshteinDistance(a, b) {
+  const left = normalizeCompact(a);
+  const right = normalizeCompact(b);
+
+  if (!left) return right.length;
+  if (!right) return left.length;
+
+  const matrix = Array.from({ length: left.length + 1 }, () => new Array(right.length + 1).fill(0));
+
+  for (let i = 0; i <= left.length; i += 1) matrix[i][0] = i;
+  for (let j = 0; j <= right.length; j += 1) matrix[0][j] = j;
+
+  for (let i = 1; i <= left.length; i += 1) {
+    for (let j = 1; j <= right.length; j += 1) {
+      const cost = left[i - 1] === right[j - 1] ? 0 : 1;
+      matrix[i][j] = Math.min(
+        matrix[i - 1][j] + 1,
+        matrix[i][j - 1] + 1,
+        matrix[i - 1][j - 1] + cost
+      );
+    }
+  }
+
+  return matrix[left.length][right.length];
+}
+
+function isNearTokenMatch(queryToken, productText) {
+  const compactQuery = normalizeCompact(queryToken);
+  const productTokens = tokenize(productText);
+
+  if (!compactQuery || compactQuery.length < 4) {
+    return false;
+  }
+
+  return productTokens.some(token => {
+    const compactToken = normalizeCompact(token);
+
+    if (!compactToken || compactToken.length < 4) {
+      return false;
+    }
+
+    return levenshteinDistance(compactQuery, compactToken) <= 1;
+  });
 }
 
 function tokenize(text) {
@@ -43,6 +139,152 @@ function tokenize(text) {
     .split(' ')
     .filter(Boolean)
     .filter(token => !STOPWORDS.has(token));
+}
+
+function hasGpuModelToken(text) {
+  const normalized = normalizeText(text);
+  const compact = normalizeCompact(text);
+
+  return (
+    /(^| )rtx ?\d/.test(normalized) ||
+    /(^| )gtx ?\d/.test(normalized) ||
+    /(^| )rx ?\d/.test(normalized) ||
+    /rtx\d/.test(compact) ||
+    /gtx\d/.test(compact) ||
+    /rx\d/.test(compact)
+  );
+}
+
+function getSpecificQueryTokens(question) {
+  const tokens = tokenize(question);
+  const expanded = new Set();
+
+  for (const token of tokens) {
+    const isMixedModelToken = /[a-z]/i.test(token) && /\d/.test(token);
+
+    if (!GENERIC_QUERY_TOKENS.has(token) && token.length >= 2) {
+      expanded.add(token);
+    }
+
+    const compact = normalizeCompact(token);
+    if (compact && compact !== token && !GENERIC_QUERY_TOKENS.has(compact) && compact.length >= 2) {
+      expanded.add(compact);
+    }
+
+    for (const part of splitAlphaNumericToken(token)) {
+      if ((isMixedModelToken || !GENERIC_QUERY_TOKENS.has(part)) && part.length >= 2) {
+        expanded.add(part);
+      }
+    }
+  }
+
+  return Array.from(expanded);
+}
+
+function getStrictModelTokens(tokens) {
+  return (Array.isArray(tokens) ? tokens : []).filter(token => {
+    const compact = normalizeCompact(token);
+    return compact.length >= 5 && /[a-z]/.test(compact) && /\d/.test(compact);
+  });
+}
+
+function tokenMatchesSearchable(token, searchable, compactSearchable) {
+  const compactToken = normalizeCompact(token);
+  const isNumericOnly = /^\d+$/.test(compactToken);
+
+  if (!compactToken) {
+    return false;
+  }
+
+  if (searchable.includes(token) || compactSearchable.includes(compactToken)) {
+    return true;
+  }
+
+  if (isNumericOnly) {
+    return false;
+  }
+
+  return isNearTokenMatch(token, searchable);
+}
+
+function questionHasStrongModelSignal(question) {
+  const tokens = tokenize(question);
+  const hasNumericToken = tokens.some(token => /\d/.test(token));
+
+  if ((tokens.includes('rtx') || tokens.includes('gtx') || tokens.includes('rx')) && hasNumericToken) {
+    return true;
+  }
+
+  if ((tokens.includes('ryzen') || tokens.includes('intel') || tokens.includes('core')) && hasNumericToken) {
+    return true;
+  }
+
+  return tokens.some(token => {
+    const compact = normalizeCompact(token);
+
+    if (!compact || GENERIC_QUERY_TOKENS.has(compact)) {
+      return false;
+    }
+
+    if (/^(\d+|\d+gb|\d+tb|ddr\d|\d+mhz|oc|rgb|wifi|pro)$/i.test(compact)) {
+      return false;
+    }
+
+    if (/[a-z]/.test(compact) && /\d/.test(compact) && compact.length >= 4) {
+      return true;
+    }
+
+    return /[a-z]/.test(compact) && compact.length >= 4;
+  });
+}
+
+function questionLooksPureConfig(question) {
+  const tokens = tokenize(question);
+
+  if (tokens.length === 0) {
+    return false;
+  }
+
+  return tokens.every(token => {
+    const compact = normalizeCompact(token);
+    return /^(\d+|\d+gb|\d+tb|\d+g|\d+t|ddr\d|\d+mhz|cl\d+|x|kit|oc|rgb)$/i.test(compact);
+  });
+}
+
+function isAmbiguousExactCandidate(question, questionTokens, bestMatch, rankedMatches) {
+  const best = bestMatch || null;
+  const second = Array.isArray(rankedMatches) ? rankedMatches[1] : null;
+
+  if (!best || !second) {
+    return false;
+  }
+
+  if (questionHasStrongModelSignal(question)) {
+    return false;
+  }
+
+  if (questionLooksPureConfig(question)) {
+    return true;
+  }
+
+  return (best.score - second.score) < 80;
+}
+
+function looksLikeExactProductQuery(question) {
+  const specificTokens = getSpecificQueryTokens(question);
+  const compactQuestion = normalizeCompact(question);
+
+  if (specificTokens.length === 0) {
+    return /[a-z]/.test(compactQuestion) && /\d/.test(compactQuestion) && compactQuestion.length >= 5;
+  }
+
+  const hasModelLikeToken = specificTokens.some(token => {
+    if (/\d/.test(token)) return true;
+    if (/^[a-z]+\d+[a-z0-9-]*$/i.test(token)) return true;
+    return token.length >= 5;
+  });
+
+  return hasModelLikeToken || /[a-z]/.test(compactQuestion) && /\d/.test(compactQuestion) && compactQuestion.length >= 5 || specificTokens.length >= 2;
 }
 
 function dedupeProducts(products) {
@@ -123,9 +365,7 @@ function matchesGpu(nombre, categoria, descripcion) {
   return (
     categoria.includes('tarjeta') ||
     categoria.includes('graf') ||
-    nombre.includes('rtx') ||
-    nombre.includes('gtx') ||
-    nombre.includes('rx') ||
+    hasGpuModelToken(`${nombre} ${descripcion}`) ||
     nombre.includes('gpu') ||
     descripcion.includes('grafica') ||
     descripcion.includes('video')
@@ -219,20 +459,7 @@ function analyzeQuestion(question) {
     case: ['gabinete', 'gabinetes', 'case', 'torre', 'chasis']
   };
 
-  const brandMatchers = [
-    'nvidia',
-    'amd',
-    'intel',
-    'corsair',
-    'kingston',
-    'teamgroup',
-    'samsung',
-    'western digital',
-    'wd',
-    'msi',
-    'asus',
-    'gigabyte'
-  ];
+  const brandMatchers = BRAND_MATCHERS;
 
   const category =
     Object.entries(categoryMatchers).find(([, terms]) =>
@@ -330,13 +557,19 @@ function analyzeQuestion(question) {
     normalized.includes('disponible') ||
     normalized.includes('disponibilidad');
 
+  const specificTokens = getSpecificQueryTokens(normalized);
+  const exactQuery = looksLikeExactProductQuery(normalized);
+
   return {
     category,
     brand,
     isGeneral,
     asksStock,
     wantsFullList,
-    isBroadCategoryQuery: categoryOnlyQuery
+    isBroadCategoryQuery: categoryOnlyQuery,
+    wantsBrandCategoryList: Boolean(category && brand) && !exactQuery,
+    specificTokens,
+    looksLikeExactProductQuery: exactQuery
   };
 }
 
@@ -431,25 +664,38 @@ function filterProductsByAnalysis(products, analysis) {
 }
 
 function findSpecificProduct(products, question, analysis) {
-  if (analysis?.isGeneral || analysis?.wantsFullList || analysis?.isBroadCategoryQuery) {
+  if (analysis?.isGeneral || analysis?.wantsFullList || analysis?.isBroadCategoryQuery || analysis?.wantsBrandCategoryList || !analysis?.looksLikeExactProductQuery) {
     return [];
   }
 
-  const questionTokens = expandQuestion(question);
+  if (questionLooksPureConfig(question)) {
+    return [];
+  }
+
+  const questionTokens = getSpecificQueryTokens(question);
   const normalizedQuestion = normalizeText(question);
+  const compactQuestion = normalizeCompact(question);
+  const strictModelTokens = getStrictModelTokens(questionTokens);
 
   const scoredMatches = (Array.isArray(products) ? products : [])
     .filter(product => matchesIntent(product, analysis))
     .map(product => {
       const nombre = normalizeText(product.nombre);
       const descripcion = normalizeText(product.descripcion);
-      const searchableText = `${nombre} ${descripcion}`;
-      const productTokens = tokenize(searchableText);
+      const categoria = normalizeText(product.categoria);
+      const searchableText = `${nombre} ${descripcion} ${categoria}`.trim();
+      const compactNombre = normalizeCompact(product.nombre);
+      const compactDescripcion = normalizeCompact(product.descripcion);
+      const compactCategoria = normalizeCompact(product.categoria);
+      const compactSearchable = `${compactNombre} ${compactDescripcion} ${compactCategoria}`.trim();
 
       let tokenMatches = 0;
 
       for (const token of questionTokens) {
-        if (searchableText.includes(token)) {
+        const compactToken = normalizeCompact(token);
+        if (
+          tokenMatchesSearchable(token, searchableText, compactSearchable)
+        ) {
           tokenMatches += 1;
         }
       }
@@ -459,22 +705,69 @@ function findSpecificProduct(products, question, analysis) {
       if (normalizedQuestion.includes(nombre)) score += 100;
       if (nombre.includes(normalizedQuestion)) score += 60;
       if (normalizedQuestion.includes(descripcion)) score += 25;
+      if (compactQuestion && compactNombre && compactQuestion.includes(compactNombre)) score += 150;
+      if (compactQuestion && compactDescripcion && compactQuestion.includes(compactDescripcion)) score += 170;
+      if (compactQuestion && compactSearchable.includes(compactQuestion)) score += 120;
 
       score += tokenMatches * 20;
 
       const allQuestionTokensPresent =
         questionTokens.length > 0 &&
-        questionTokens.every(token => searchableText.includes(token));
+        questionTokens.every(token => {
+          const compactToken = normalizeCompact(token);
+          return (
+            tokenMatchesSearchable(token, searchableText, compactSearchable)
+          );
+        });
 
       if (allQuestionTokensPresent) {
-        score += 40;
+        score += 80;
+      }
+
+      const tokenParts = questionTokens
+        .flatMap(token => splitAlphaNumericToken(token))
+        .filter(part => part.length >= 2);
+
+      const allTokenPartsPresent =
+        tokenParts.length > 0 &&
+        tokenParts.every(part => {
+          const compactPart = normalizeCompact(part);
+          return (
+            tokenMatchesSearchable(part, searchableText, compactSearchable)
+          );
+        });
+
+      if (allTokenPartsPresent) {
+        score += 110;
+      }
+
+      if (strictModelTokens.length > 0) {
+        const hasStrictModelCoverage = strictModelTokens.some(token => {
+          const compactToken = normalizeCompact(token);
+          const parts = splitAlphaNumericToken(token).filter(part => part.length >= 2);
+          const fullMatch =
+            tokenMatchesSearchable(token, searchableText, compactSearchable);
+          const partsMatch =
+            parts.length > 0 &&
+            parts.every(part => {
+              const compactPart = normalizeCompact(part);
+              return (
+                tokenMatchesSearchable(part, searchableText, compactSearchable)
+              );
+            });
+
+          return fullMatch || partsMatch;
+        });
+
+        if (!hasStrictModelCoverage) {
+          score = 0;
+        }
       }
 
       return {
         product,
         score,
-        tokenMatches,
-        productTokenCount: productTokens.length
+        tokenMatches
       };
     })
     .filter(item => item.score > 0 && item.tokenMatches > 0)
@@ -490,7 +783,7 @@ function findSpecificProduct(products, question, analysis) {
 
   const bestMatch = scoredMatches[0];
 
-  if (bestMatch.score < 40) {
+  if (bestMatch.score < 140) {
     return [];
   }
 
@@ -500,7 +793,10 @@ function findSpecificProduct(products, question, analysis) {
 
 
 function findSimilarProducts(products, question, analysis, featuredProduct = null) {
-  let filtered = filterProductsByAnalysis(products, analysis);
+  let filtered = filterProductsByAnalysis(
+    products,
+    featuredProduct ? { ...analysis, brand: null } : analysis
+  );
 
   if (featuredProduct) {
     const featuredCategory = getCategoryKey(featuredProduct);
@@ -728,6 +1024,7 @@ function formatFaqAnswer(answer, products, analysis) {
 async function handleFaqLegacy(payload) {
   const question = payload.pregunta || '';
   const allProducts = Array.isArray(payload.productos) ? payload.productos : [];
+  
 
   const analysis = analyzeQuestion(question);
   const relevantFaq = getRelevantFaq(question);
@@ -737,7 +1034,7 @@ async function handleFaqLegacy(payload) {
 
   if (analysis.isGeneral) {
     relevantProducts = getDiverseProducts(allProducts, 6);
-  } else if ((analysis.wantsFullList || analysis.isBroadCategoryQuery) && analysis.category) {
+  } else if ((analysis.wantsFullList || analysis.isBroadCategoryQuery || analysis.wantsBrandCategoryList) && analysis.category) {
     relevantProducts = getFullCategoryProducts(allProducts, analysis);
   } else if (specificMatches.length > 0) {
     const featuredProduct = specificMatches[0];
@@ -840,7 +1137,7 @@ async function handleFaqLegacy(payload) {
   ].slice(0, 4);
 
   const productoDestacado =
-    (analysis.wantsFullList || analysis.isBroadCategoryQuery)
+    (analysis.wantsFullList || analysis.isBroadCategoryQuery || analysis.wantsBrandCategoryList)
       ? null
       : (specificMatches.length > 0 ? specificMatches[0] : null);
 
@@ -860,6 +1157,9 @@ async function handleFaqLegacy(payload) {
 async function handleFaq(payload) {
   const question = payload.pregunta || '';
   const fallbackProducts = Array.isArray(payload.productos) ? payload.productos : [];
+  //se agrego esta nueva linea por un bug raro que hacia que el fallback no tuviera productos, lo cual hacia que el RAG fallara al no tener productos para mostrar aunque la pregunta fuera general
+  const pureConfigQuery = questionLooksPureConfig(question);
+
 
   try {
     const ragResult = await runFaqRagPipeline({
@@ -874,7 +1174,7 @@ async function handleFaq(payload) {
       ? llm.sugerencias
       : [];
 
-    const productoDestacado = retrieval.featuredProduct || null;
+    const productoDestacado = pureConfigQuery ? null : (retrieval.featuredProduct || null);
 
     const productosRelacionados = Array.isArray(retrieval.relatedProducts)
       ? (

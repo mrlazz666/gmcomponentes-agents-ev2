@@ -9,8 +9,13 @@
     <ion-segment-button value="recommendation">
       <ion-label>Recomendacion</ion-label>
     </ion-segment-button>
+
     <ion-segment-button value="faq">
       <ion-label>FAQ</ion-label>
+    </ion-segment-button>
+
+    <ion-segment-button value="agents">
+      <ion-label>Agentes EV2</ion-label>
     </ion-segment-button>
   </ion-segment>
 
@@ -19,15 +24,27 @@
       <div class="recommendationHeader">
         <div>
           <h2>Recomendaciones</h2>
-          <p class="sectionLead">La IA te hace preguntas antes de recomendar para ser mas precisa.</p>
+          <p class="sectionLead">
+            La IA te hace preguntas antes de recomendar para ser mas precisa.
+          </p>
         </div>
-        <button type="button" class="ghostButton" (click)="resetRecommendationConversation()">
+
+        <button
+          type="button"
+          class="ghostButton"
+          (click)="resetRecommendationConversation()"
+        >
           Reiniciar
         </button>
       </div>
 
       <div class="summaryStrip">
-        <span class="summaryChip" *ngFor="let chip of recommendationSummaryChips">{{ chip }}</span>
+        <span
+          class="summaryChip"
+          *ngFor="let chip of recommendationSummaryChips"
+        >
+          {{ chip }}
+        </span>
       </div>
 
       <div class="chatLog">
@@ -36,7 +53,9 @@
           class="chatBubble"
           [ngClass]="entry.role === 'assistant' ? 'assistantBubble' : 'userBubble'"
         >
-          <span class="bubbleRole">{{ entry.role === 'assistant' ? 'IA' : 'Tu' }}</span>
+          <span class="bubbleRole">
+            {{ entry.role === 'assistant' ? 'IA' : 'Tu' }}
+          </span>
           <p>{{ entry.text }}</p>
         </article>
       </div>
@@ -61,7 +80,9 @@
           [placeholder]="recommendationPlaceholderByStep[recommendationStep]"
         ></textarea>
 
-        <ng-container *ngIf="recommendationStep === 'initial'; else lockedBudgetBlock">
+        <ng-container
+          *ngIf="recommendationStep === 'initial'; else lockedBudgetBlock"
+        >
           <input
             name="recommendationBudget"
             type="text"
@@ -72,18 +93,24 @@
             (input)="formatBudgetInput($event)"
             placeholder="Presupuesto CLP (obligatorio) ej: $600.000"
           />
-          <p class="formError" *ngIf="recommendationBudgetError">{{ recommendationBudgetError }}</p>
+
+          <p class="formError" *ngIf="recommendationBudgetError">
+            {{ recommendationBudgetError }}
+          </p>
         </ng-container>
 
         <ng-template #lockedBudgetBlock>
-          <div class="lockedBudget">Presupuesto actual: {{ formattedRecommendationBudget }}</div>
+          <div class="lockedBudget">
+            Presupuesto actual: {{ formattedRecommendationBudget }}
+          </div>
         </ng-template>
 
         <button
           type="submit"
           [disabled]="recommendationLoading || (recommendationStep === 'initial' && !recommendationBudget)"
         >
-          {{ recommendationLoading ? 'Pensando...' : recommendationButtonLabelByStep[recommendationStep] }}
+          {{ recommendationLoading ? 'Pensando...' :
+          recommendationButtonLabelByStep[recommendationStep] }}
         </button>
       </form>
     </section>
@@ -92,26 +119,41 @@
       <div class="resultHeader">
         <div>
           <h2>Resultado</h2>
-          <p class="sectionLead">El carrusel ordena de mayor prioridad a menor prioridad.</p>
+          <p class="sectionLead">
+            El carrusel ordena de mayor prioridad a menor prioridad.
+          </p>
         </div>
       </div>
 
-      <div class="carouselShowcase" *ngIf="activeRecommendationProduct && activeRecommendationCopy; else emptyRecommendation">
+      <div
+        class="carouselShowcase"
+        *ngIf="activeRecommendationProduct && activeRecommendationCopy; else emptyRecommendation"
+      >
         <div class="carouselHero">
           <div>
             <p class="carouselEyebrow">{{ activeRecommendationCopy.title }}</p>
-            <h3 class="carouselHeadline">{{ activeRecommendationProduct.nombre }}</h3>
-            <p class="carouselSubtitle">{{ activeRecommendationCopy.subtitle }}</p>
+            <h3 class="carouselHeadline">
+              {{ activeRecommendationProduct.nombre }}
+            </h3>
+            <p class="carouselSubtitle">
+              {{ activeRecommendationCopy.subtitle }}
+            </p>
             <p class="carouselBody">{{ activeRecommendationCopy.body }}</p>
           </div>
 
           <div class="carouselHeroMeta">
-            <span class="heroMetaChip" *ngIf="activeRecommendationProduct.marca">
+            <span
+              class="heroMetaChip"
+              *ngIf="activeRecommendationProduct.marca"
+            >
               {{ activeRecommendationProduct.marca }}
             </span>
-            <span class="heroMetaChip">{{ activeRecommendationProduct.categoria }}</span>
+            <span class="heroMetaChip"
+              >{{ activeRecommendationProduct.categoria }}</span
+            >
             <span class="heroMetaChip">
-              {{ activeRecommendationProduct.precio | currency:'CLP':'symbol':'1.0-0' }}
+              {{ activeRecommendationProduct.precio |
+              currency:'CLP':'symbol':'1.0-0' }}
             </span>
           </div>
         </div>
@@ -134,20 +176,41 @@
                 [alt]="activeRecommendationProduct.nombre"
               />
             </div>
-            <p class="productRank" *ngIf="activeRecommendationProduct.rankLabel">
+
+            <p
+              class="productRank"
+              *ngIf="activeRecommendationProduct.rankLabel"
+            >
               {{ activeRecommendationProduct.rankLabel }}
             </p>
+
             <h3>{{ activeRecommendationProduct.nombre }}</h3>
-            <p class="productNote" *ngIf="activeRecommendationProduct.recommendationNote">
+
+            <p
+              class="productNote"
+              *ngIf="activeRecommendationProduct.recommendationNote"
+            >
               {{ activeRecommendationProduct.recommendationNote }}
             </p>
-            <p *ngIf="activeRecommendationProduct.marca">Marca: {{ activeRecommendationProduct.marca }}</p>
+
+            <p *ngIf="activeRecommendationProduct.marca">
+              Marca: {{ activeRecommendationProduct.marca }}
+            </p>
             <p>{{ activeRecommendationProduct.descripcion }}</p>
             <p>{{ activeRecommendationProduct.categoria }}</p>
-            <p>{{ activeRecommendationProduct.precio | currency:'CLP':'symbol':'1.0-0' }}</p>
+            <p>
+              {{ activeRecommendationProduct.precio |
+              currency:'CLP':'symbol':'1.0-0' }}
+            </p>
             <p>Stock: {{ activeRecommendationProduct.stock }}</p>
-            <ul class="specList" *ngIf="activeRecommendationProduct.specs?.length">
-              <li *ngFor="let spec of activeRecommendationProduct.specs">{{ spec }}</li>
+
+            <ul
+              class="specList"
+              *ngIf="activeRecommendationProduct.specs?.length"
+            >
+              <li *ngFor="let spec of activeRecommendationProduct.specs">
+                {{ spec }}
+              </li>
             </ul>
           </article>
 
@@ -177,7 +240,11 @@
             (click)="setActiveRecommendation(i)"
           >
             <span class="thumbRank">{{ i + 1 }}</span>
-            <img class="thumbImage" [src]="product.image" [alt]="product.nombre" />
+            <img
+              class="thumbImage"
+              [src]="product.image"
+              [alt]="product.nombre"
+            />
             <span class="thumbLabel">{{ product.nombre }}</span>
           </button>
         </div>
@@ -186,7 +253,8 @@
       <ng-template #emptyRecommendation>
         <div class="emptyResult">
           <p>
-            Cuando terminemos las preguntas de marca, uso y prioridad, aqui apareceran las mejores recomendaciones.
+            Cuando terminemos las preguntas de marca, uso y prioridad, aqui
+            apareceran las mejores recomendaciones.
           </p>
         </div>
       </ng-template>
@@ -235,8 +303,8 @@
               <p><strong>{{ faqResult.productoDestacado.nombre }}</strong></p>
               <p>{{ faqResult.productoDestacado.descripcion }}</p>
               <p>
-                Precio:
-                {{ faqResult.productoDestacado.precio | currency:'CLP':'symbol':'1.0-0' }}
+                Precio: {{ faqResult.productoDestacado.precio |
+                currency:'CLP':'symbol':'1.0-0' }}
               </p>
               <p>
                 Stock:
@@ -246,18 +314,25 @@
           </div>
         </div>
 
-        <div class="result-block" *ngIf="faqResult.productosRelacionados?.length">
+        <div
+          class="result-block"
+          *ngIf="faqResult.productosRelacionados?.length"
+        >
           <h3>Productos relacionados</h3>
 
           <div class="faq-carousel">
             <div class="faq-carousel-track">
-              <div class="faq-product-card" *ngFor="let item of faqResult.productosRelacionados">
+              <div
+                class="faq-product-card"
+                *ngFor="let item of faqResult.productosRelacionados"
+              >
                 <img
                   *ngIf="item.image"
                   [src]="item.image"
                   [alt]="item.nombre"
                   class="faq-product-image"
                 />
+
                 <div class="faq-product-content">
                   <p><strong>{{ item.nombre }}</strong></p>
                   <p>{{ item.descripcion }}</p>
@@ -273,5 +348,579 @@
         </div>
       </ion-card-content>
     </ion-card>
+  </div>
+
+  <div *ngIf="selectedSegment === 'agents'" class="agentPanelGroup">
+    <section class="agentModeSwitch">
+      <button
+        type="button"
+        [ngClass]="agentMode === 'faq' ? 'active' : ''"
+        (click)="setAgentMode('faq')"
+      >
+        FAQ Agent
+      </button>
+
+      <button
+        type="button"
+        [ngClass]="agentMode === 'recommendation' ? 'active' : ''"
+        (click)="setAgentMode('recommendation')"
+      >
+        Recommendation Agent
+      </button>
+    </section>
+
+    <section class="panel">
+      <div class="recommendationHeader">
+        <div>
+          <h2>Agentes EV2</h2>
+          <p class="sectionLead">
+            Esta vista muestra la orquestacion, memoria, tools y agentes
+            especializados de la EV2.
+          </p>
+        </div>
+      </div>
+
+      <form
+        class="stack"
+        *ngIf="agentMode === 'faq'"
+        (ngSubmit)="submitAgentFaq()"
+      >
+        <textarea
+          name="agentQuestion"
+          rows="3"
+          [(ngModel)]="agentQuestion"
+          placeholder="Ejemplo: tienen stock de rtx 4060"
+        ></textarea>
+
+        <button
+          type="submit"
+          [disabled]="agentLoading || !agentQuestion.trim()"
+        >
+          {{ agentLoading ? 'Ejecutando agentes...' : 'Consultar con agentes
+          EV2' }}
+        </button>
+      </form>
+
+      <div
+        class="agentRecommendationWorkspace"
+        *ngIf="agentMode === 'recommendation'"
+      >
+        <div class="agentStageRail">
+          <article
+            class="agentStageItem"
+            *ngFor="let stage of recommendationAgentStages"
+            [ngClass]="{
+              active: stage.key === currentRecommendationStageKey,
+              done: isAgentStageDone(stage)
+            }"
+          >
+            <span>{{ stage.label }}</span>
+            <small>{{ stage.helper }}</small>
+          </article>
+        </div>
+
+        <section class="agentStageWindow">
+          <div>
+            <span class="bubbleRole">Etapa actual</span>
+            <h3>{{ activeRecommendationAgentStage.label }}</h3>
+            <p>{{ activeRecommendationAgentStage.helper }}</p>
+          </div>
+
+          <form class="stack" (ngSubmit)="submitAgentRecommendation()">
+            <textarea
+              name="agentRecommendationMessage"
+              rows="3"
+              [(ngModel)]="agentRecommendationMessage"
+              [placeholder]="agentRecommendationPlaceholder"
+              [disabled]="agentLoading || agentRecommendationNextStep === 'done'"
+            ></textarea>
+
+            <button
+              type="submit"
+              [disabled]="agentLoading || (!agentRecommendationMessage.trim() && agentRecommendationNextStep !== 'done')"
+            >
+              {{ agentRecommendationButtonLabel }}
+            </button>
+          </form>
+
+          <button
+            type="button"
+            class="ghostButton agentResetButton"
+            *ngIf="agentRecommendationMessages.length > 1 || agentRecommendationNextStep === 'done'"
+            (click)="resetAgentRecommendationFlow()"
+          >
+            Reiniciar flujo Recommendation
+          </button>
+        </section>
+
+        <div
+          class="quickOptionRow"
+          *ngIf="agentRecommendationQuickOptions.length"
+        >
+          <button
+            *ngFor="let option of agentRecommendationQuickOptions"
+            type="button"
+            class="quickOption"
+            [disabled]="agentLoading"
+            (click)="selectAgentRecommendationOption(option)"
+          >
+            {{ option }}
+          </button>
+        </div>
+
+        <section
+          class="agentConversationPanel"
+          *ngIf="agentRecommendationMessages.length > 1 || agentMode === 'recommendation'"
+        >
+          <div class="agentConversationToggle">
+            <div>
+              <h3>Conversacion Recommendation Agent</h3>
+              <p>{{ agentConversationSummary }}</p>
+            </div>
+
+            <button type="button" (click)="toggleAgentConversation()">
+              {{ showAgentConversation ? 'Ocultar conversacion' : 'Ver
+              conversacion completa' }}
+            </button>
+          </div>
+
+          <div class="agentConversationList" *ngIf="showAgentConversation">
+            <article
+              *ngFor="let entry of agentRecommendationMessages"
+              class="chatBubble"
+              [ngClass]="entry.role === 'assistant' ? 'assistantBubble' : 'userBubble'"
+            >
+              <span class="bubbleRole">
+                {{ entry.role === 'assistant' ? 'Agente' : 'Tu' }}
+              </span>
+              <p>{{ entry.text }}</p>
+            </article>
+          </div>
+        </section>
+
+        <section
+          class="agentRecommendationResults"
+          *ngIf="primaryAgentRecommendation"
+        >
+          <h3>Resumen final de recomendacion</h3>
+
+          <article class="agentPrimaryRecommendation">
+            <img
+              *ngIf="primaryAgentRecommendation.image"
+              [src]="primaryAgentRecommendation.image"
+              [alt]="primaryAgentRecommendation.nombre"
+            />
+
+            <div>
+              <span class="agentFlowStatus">Producto principal</span>
+              <strong>{{ primaryAgentRecommendation.nombre }}</strong>
+              <p>{{ primaryAgentRecommendation.descripcion }}</p>
+
+              <div class="agentRecommendationMeta">
+                <span>
+                  {{ primaryAgentRecommendation.precio |
+                  currency:'CLP':'symbol':'1.0-0' }}
+                </span>
+                <span>Stock: {{ primaryAgentRecommendation.stock }}</span>
+              </div>
+            </div>
+          </article>
+
+          <div
+            class="agentSecondaryRecommendations"
+            *ngIf="secondaryAgentRecommendations.length"
+          >
+            <h4>Alternativas recomendadas</h4>
+
+            <article
+              class="agentSuggestionCard"
+              *ngFor="let item of secondaryAgentRecommendations"
+            >
+              <img *ngIf="item.image" [src]="item.image" [alt]="item.nombre" />
+
+              <div>
+                <strong>{{ item.nombre }}</strong>
+                <p>{{ item.descripcion }}</p>
+                <span>{{ item.precio | currency:'CLP':'symbol':'1.0-0' }}</span>
+                <span>Stock: {{ item.stock }}</span>
+              </div>
+            </article>
+          </div>
+        </section>
+      </div>
+
+      <div class="agentInputWarning" *ngIf="agentInputWarning">
+        <strong>Consulta no valida para el agente</strong>
+        <p>{{ agentInputWarning }}</p>
+      </div>
+
+      <p class="formError" *ngIf="agentError">{{ agentError }}</p>
+    </section>
+
+    <section class="agentLoadingPanel" *ngIf="showAgentLoadingPanel">
+      <div class="agentLoadingHeader">
+        <div>
+          <h2>Orquestando agentes</h2>
+          <p class="sectionLead">
+            La capa EV2 esta ejecutando el flujo antes de responder.
+          </p>
+        </div>
+
+        <div class="agentSpinner"></div>
+      </div>
+
+      <div class="agentLoadingTimeline">
+        <article
+          class="agentLoadingStep"
+          *ngFor="let step of agentLoadingSteps; let i = index"
+          [ngClass]="{
+            active: i === activeAgentLoadingStep,
+            done: i < activeAgentLoadingStep
+          }"
+        >
+          <span class="agentLoadingDot"></span>
+          <p>{{ step }}</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel" *ngIf="agentResult">
+      <div class="resultHeader">
+        <div>
+          <h2>Respuesta del agente</h2>
+          <p class="sectionLead">
+            Resultado final generado por el Orchestrator Agent.
+          </p>
+        </div>
+      </div>
+
+      <div class="agentAnswer">
+        <p>{{ agentResult.answer }}</p>
+      </div>
+
+      <div class="agentTechnicalToggle">
+        <div>
+          <h3>Resumen tecnico EV2</h3>
+          <p>{{ agentTechnicalSummary }}</p>
+        </div>
+
+        <button type="button" (click)="toggleAgentTechnicalDetails()">
+          {{ showAgentTechnicalDetails ? 'Ocultar detalle' : 'Ver trazabilidad
+          completa' }}
+        </button>
+      </div>
+
+      <div *ngIf="showAgentTechnicalDetails">
+        <div class="agentTraceGrid">
+          <article class="agentTraceBox">
+            <span class="bubbleRole">Intent</span>
+            <p>{{ agentResult.intent }}</p>
+          </article>
+
+          <article class="agentTraceBox langchainTraceBox">
+            <span class="bubbleRole">Framework agente</span>
+            <p>{{ agentFrameworkName }}</p>
+          </article>
+
+          <article class="agentTraceBox langchainTraceBox">
+            <span class="bubbleRole">Tool LangChain</span>
+            <p>{{ agentLangChainToolName }}</p>
+          </article>
+
+          <article class="agentTraceBox">
+            <span class="bubbleRole">Memoria</span>
+            <p>{{ agentResult.memory_messages }} mensajes</p>
+          </article>
+
+          <article class="agentTraceBox">
+            <span class="bubbleRole">Fuente</span>
+            <p>{{ agentResult.data.source || 'sin fuente' }}</p>
+          </article>
+
+          <article class="agentTraceBox">
+            <span class="bubbleRole">Estado integracion</span>
+            <p>{{ agentResult.data.integration_status || 'sin estado' }}</p>
+          </article>
+        </div>
+
+        <div class="result-block">
+          <h3>Decision del Orchestrator Agent</h3>
+          <div class="agentDecisionBox">
+            <p>{{ agentDecisionSummary }}</p>
+          </div>
+        </div>
+
+        <div class="result-block">
+          <h3>Ejecucion con LangChain</h3>
+
+          <div class="langchainPipeline">
+            <article>
+              <span>1</span>
+              <strong>Orchestrator</strong>
+              <p>Decide el intent y deriva al agente especializado.</p>
+            </article>
+
+            <article>
+              <span>2</span>
+              <strong>Planner</strong>
+              <p>Genera el plan de pasos para resolver la tarea.</p>
+            </article>
+
+            <article>
+              <span>3</span>
+              <strong>LangChain Tool</strong>
+              <p>Ejecuta la herramienta registrada como StructuredTool.</p>
+            </article>
+
+            <article>
+              <span>4</span>
+              <strong>EV1</strong>
+              <p>Responde usando FAQ/RAG o Recommendation real.</p>
+            </article>
+          </div>
+
+          <div class="agentDecisionBox langchainSummaryBox">
+            <p>{{ agentLangChainFlowSummary }}</p>
+          </div>
+        </div>
+
+        <div class="result-block">
+          <h3>Agentes ejecutados</h3>
+
+          <div class="agentFlowGrid">
+            <article class="agentFlowCard" *ngIf="agentResult.intent === 'faq'">
+              <span class="agentFlowStatus">Coordina</span>
+              <strong>Orchestrator Agent</strong>
+              <p>
+                Recibe la consulta, revisa la memoria y decide que agente debe
+                responder.
+              </p>
+            </article>
+
+            <article class="agentFlowCard" *ngIf="agentResult.intent === 'faq'">
+              <span class="agentFlowStatus">Planifica</span>
+              <strong>Planner Agent</strong>
+              <p>
+                Clasifica la intencion como FAQ y genera el plan de ejecucion.
+              </p>
+            </article>
+
+            <article class="agentFlowCard" *ngIf="agentResult.intent === 'faq'">
+              <span class="agentFlowStatus">Ejecuta</span>
+              <strong>FAQ Agent</strong>
+              <p>
+                Usa el RAG de la EV1 como herramienta real para responder con
+                evidencia.
+              </p>
+            </article>
+
+            <article
+              class="agentFlowCard"
+              *ngIf="agentResult.intent === 'recommendation'"
+            >
+              <span class="agentFlowStatus">Coordina</span>
+              <strong>Orchestrator Agent</strong>
+              <p>
+                Recibe el turno conversacional y mantiene el flujo por
+                session_id.
+              </p>
+            </article>
+
+            <article
+              class="agentFlowCard"
+              *ngIf="agentResult.intent === 'recommendation'"
+            >
+              <span class="agentFlowStatus">Planifica</span>
+              <strong>Planner Agent</strong>
+              <p>
+                Detecta recomendacion y organiza el avance por presupuesto,
+                marca, uso y prioridad.
+              </p>
+            </article>
+
+            <article
+              class="agentFlowCard"
+              *ngIf="agentResult.intent === 'recommendation'"
+            >
+              <span class="agentFlowStatus">Ejecuta</span>
+              <strong>Recommendation Agent</strong>
+              <p>
+                Usa la memoria conversacional y llama al recomendador EV1 como
+                herramienta real.
+              </p>
+            </article>
+          </div>
+        </div>
+
+        <div class="result-block">
+          <h3>Tools usadas por los agentes</h3>
+
+          <div class="agentFlowGrid">
+            <article class="agentFlowCard toolCard">
+              <span class="agentFlowStatus">Tool</span>
+              <strong>Memory Tool</strong>
+              <p>Registra turnos y estado conversacional por session_id.</p>
+            </article>
+
+            <article
+              class="agentFlowCard toolCard"
+              *ngIf="agentResult.intent === 'faq'"
+            >
+              <span class="agentFlowStatus">Tool</span>
+              <strong>FAQ/RAG EV1 Tool</strong>
+              <p>
+                Llama al endpoint /api/faq de la EV1 y recupera evidencia del
+                RAG.
+              </p>
+            </article>
+
+            <article
+              class="agentFlowCard toolCard"
+              *ngIf="agentResult.intent === 'recommendation'"
+            >
+              <span class="agentFlowStatus">Tool</span>
+              <strong>Recommendation EV1 Tool</strong>
+              <p>
+                Llama al endpoint /api/recommendation de la EV1 y recupera la
+                siguiente etapa o resultado.
+              </p>
+            </article>
+          </div>
+        </div>
+
+        <div class="result-block" *ngIf="agentLongTermMemory">
+          <div class="agentMemoryToggle">
+            <div>
+              <h3>Memoria largo plazo EV2</h3>
+              <p>{{ agentLongTermSummary }}</p>
+            </div>
+
+            <button type="button" (click)="toggleAgentLongTermMemory()">
+              {{ showAgentLongTermMemory ? 'Ocultar memoria' : 'Ver memoria' }}
+            </button>
+          </div>
+
+          <div class="agentLongTermPanel" *ngIf="showAgentLongTermMemory">
+            <div class="agentTraceGrid">
+              <article class="agentTraceBox">
+                <span class="bubbleRole">Estado</span>
+                <p>Activa</p>
+              </article>
+
+              <article class="agentTraceBox">
+                <span class="bubbleRole">Tipo</span>
+                <p>{{ agentLongTermType }}</p>
+              </article>
+
+              <article class="agentTraceBox">
+                <span class="bubbleRole">Recuperadas</span>
+                <p>{{ agentLongTermMatches.length }} memoria(s)</p>
+              </article>
+            </div>
+
+            <div class="agentMemorySavedFact">
+              <span class="bubbleRole">Hecho guardado en esta ejecucion</span>
+              <p>{{ agentLongTermSavedFactText }}</p>
+            </div>
+
+            <div class="agentMemoryList" *ngIf="agentLongTermMatches.length">
+              <h4>Coincidencias recuperadas</h4>
+
+              <article *ngFor="let memory of agentLongTermMatches">
+                <p>{{ formatLongTermMemoryFact(memory) }}</p>
+              </article>
+            </div>
+          </div>
+        </div>
+
+        <div class="result-block" *ngIf="agentResult.used_tools?.length">
+          <h3>Trazabilidad devuelta por backend</h3>
+          <div class="quickOptionRow">
+            <span
+              class="summaryChip"
+              *ngFor="let tool of agentResult.used_tools"
+            >
+              {{ formatAgentToolName(tool) }}
+            </span>
+          </div>
+        </div>
+
+        <div class="result-block" *ngIf="agentResult.plan?.length">
+          <h3>Plan del Planner Agent</h3>
+
+          <div class="agentPlanList">
+            <article
+              class="agentPlanItem"
+              *ngFor="let step of agentResult.plan"
+            >
+              <strong>{{ step.name }}</strong>
+              <p>{{ step.description }}</p>
+              <span>{{ step.status }}</span>
+            </article>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-block" *ngIf="agentResult.data.productoDestacado">
+        <h3>Producto destacado desde FAQ/RAG EV1</h3>
+
+        <div class="product-card">
+          <img
+            *ngIf="agentResult.data.productoDestacado.image"
+            [src]="agentResult.data.productoDestacado.image"
+            [alt]="agentResult.data.productoDestacado.nombre"
+            class="product-image"
+          />
+
+          <div class="product-info">
+            <p>
+              <strong>{{ agentResult.data.productoDestacado.nombre }}</strong>
+            </p>
+            <p>{{ agentResult.data.productoDestacado.descripcion }}</p>
+            <p>
+              Precio: {{ agentResult.data.productoDestacado.precio |
+              currency:'CLP':'symbol':'1.0-0' }}
+            </p>
+            <p>
+              Stock:
+              <strong>{{ agentResult.data.productoDestacado.stock }}</strong>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="result-block"
+        *ngIf="agentResult.data.productosRelacionados?.length"
+      >
+        <h3>Productos relacionados desde RAG EV1</h3>
+
+        <div class="faq-carousel">
+          <div class="faq-carousel-track">
+            <div
+              class="faq-product-card"
+              *ngFor="let item of agentResult.data.productosRelacionados"
+            >
+              <img
+                *ngIf="item.image"
+                [src]="item.image"
+                [alt]="item.nombre"
+                class="faq-product-image"
+              />
+
+              <div class="faq-product-content">
+                <p><strong>{{ item.nombre }}</strong></p>
+                <p>{{ item.descripcion }}</p>
+                <p>{{ item.precio | currency:'CLP':'symbol':'1.0-0' }}</p>
+                <p class="faq-stock">
+                  Stock:
+                  <strong>{{ item.stock }}</strong>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 </ion-content>

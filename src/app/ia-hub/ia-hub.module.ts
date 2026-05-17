@@ -5,6 +5,7 @@ import { IonicModule } from '@ionic/angular';
 import { IaHubPageRoutingModule } from './ia-hub-routing.module';
 import { IaHubPage } from './ia-hub.page';
 
+
 @NgModule({
   imports: [
     CommonModule,

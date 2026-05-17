@@ -37,3 +37,22 @@ temp/
 
 # Local reference project
 gm-ai-assistant-main/
+
+
+# Python generated files
+__pycache__/
+*.pyc
+
+# EV2 local runtime logs
+agente/logs/
+
+
+# Python virtual environments
+agente/.venv/
+.venv/
+
+# Local class/reference material
+AGENTES PARA IMPLEMENTAR/
+
+# Local continuity notes
+CONTINUAR_EV2_AGENTES_PROMPT.txt
