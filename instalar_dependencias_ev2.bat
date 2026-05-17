@@ -110,6 +110,17 @@ if errorlevel 1 (
 )
 echo.
 echo ==========================================
+echo Configurando archivo .env
+echo ==========================================
+if not exist "%ROOT%groq-proxy\.env" (
+  copy "%ROOT%groq-proxy\.env.example" "%ROOT%groq-proxy\.env"
+  echo [LISTO] groq-proxy\.env creado desde .env.example
+  echo Abrelo y reemplaza las claves reales antes de iniciar.
+) else (
+  echo [OK] groq-proxy\.env ya existe, no se sobreescribe.
+)
+echo.
+echo ==========================================
 echo Instalacion completada correctamente
 echo ==========================================
 echo.
@@ -117,11 +128,11 @@ echo ==========================================
 echo CONFIGURACION REQUERIDA ANTES DE INICIAR
 echo ==========================================
 echo.
-echo Debes crear y completar el archivo:
+echo Debes abrir y completar el archivo:
 echo.
 echo   groq-proxy\.env
 echo.
-echo Basate en groq-proxy\.env.example y completa:
+echo Reemplaza los siguientes valores con tus claves reales:
 echo.
 echo   GROQ_API_KEY=tu clave de groq.com
 echo   VOYAGE_API_KEY=tu clave de voyageai.com
